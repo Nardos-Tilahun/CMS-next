@@ -1,0 +1,14 @@
+{
+  "cSpell.words": [
+    "daisyui",
+    "logocms",
+    "Parens",
+    "reduxjs",
+    "tailwindcss",
+    "webp"
+  ],
+  "prettier.configPath": "/home/nardos/.prettierrc",
+  "editor.stickyTabStops": true,
+  "editor.tabCompletion": "on",
+  "editor.tabSize": 2
+}
