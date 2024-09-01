@@ -43,7 +43,7 @@ const Sidebar = () => {
 
       {/* Sidebar */}
       {isOpen && (
-        <div
+        <aside
           className={`fixed top-0 left-0 h-screen bg-gray-900 flex flex-col transform transition-transform md:relative md:w-48 md:flex md:flex-col md:max-w-48 md:translate-x-0 z-40 ${
             isOpen ? 'translate-x-0' : '-translate-x-full'
           }`}
@@ -78,7 +78,7 @@ const Sidebar = () => {
               </Link>
             </nav>
           </div>
-        </div>
+        </aside>
       )}
 
       {/* Overlay for Small Screens */}
