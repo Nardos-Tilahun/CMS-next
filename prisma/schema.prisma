@@ -1,0 +1,140 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Looking for ways to speed up your queries, or scale easily with your serverless or edge functions?
+// Try Prisma Accelerate: https://pris.ly/cli/accelerate-init
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  project_id         Int       @id @default(autoincrement())
+  project_name       String
+  project_location   String?
+  start_date         DateTime?
+  end_date           DateTime?
+  contract_amount    Decimal?
+  project_manager    User?    @relation("ProjectManager", fields: [project_manager_id], references: [user_id])
+  project_manager_id Int?
+  client             User?    @relation("Client", fields: [client_id], references: [user_id])
+  client_id          Int?
+  BillOfQuantities   Bill_of_Quantity[]
+  Milestones         Milestone[]
+  Financials         Financial?
+
+  @@map("Project")
+}
+
+model User {
+  user_id       Int     @id @default(autoincrement())
+  email         String  @unique
+  password      String
+  first_name    String
+  last_name     String
+  phone_number  String?
+  role          Role?  @relation(fields: [role_id], references: [role_id])
+  role_id       Int?
+  managedProjects  Project[] @relation("ProjectManager")
+  clientProjects   Project[] @relation("Client")
+  createdAt        DateTime  @default(now()) 
+  updatedAt        DateTime  @updatedAt
+
+  @@map("User")
+}
+
+model Role {
+  role_id   Int     @id @default(autoincrement())
+  role_name String  @unique
+  Users     User[]
+
+  @@map("Role")
+}
+
+model Bill_of_Quantity {
+  boq_item_id  Int     @id @default(autoincrement())
+  project      Project @relation(fields: [project_id], references: [project_id])
+  project_id   Int
+  item_name    String
+  quantity     Decimal
+  unit         String?
+  unit_cost    Decimal
+  amount       Decimal @default(0)
+  Takeoffs     Takeoff[]
+
+  @@map("Bill_of_Quantity")
+}
+
+model Milestone {
+  milestone_id          Int       @id @default(autoincrement())
+  project               Project  @relation(fields: [project_id], references: [project_id])
+  project_id            Int
+  milestone_name        String
+  milestone_start_date  DateTime?
+  milestone_end_date    DateTime?
+  milestone_budget      Decimal?
+  Takeoffs              Takeoff[]
+
+  @@map("Milestone")
+}
+
+model Takeoff {
+  takeoff_id        Int     @id @default(autoincrement())
+  takeoff_name      String?
+  boq_item          Bill_of_Quantity@relation(fields: [boq_item_id], references: [boq_item_id])
+  boq_item_id       Int
+  milestone         Milestone @relation(fields: [milestone_id], references: [milestone_id])
+  milestone_id      Int
+  takeoff_quantity  Decimal
+  AllocationResource Allocation_resource[]
+
+  @@map("Takeoff")
+}
+
+model Resource {
+  resource_id        Int      @id @default(autoincrement())
+  resource_name      String
+  resource_type      ResourceType
+  resource_unit      String?
+  resource_cost_per_unit Decimal
+  AllocationResource Allocation_resource[]
+  createdAt        DateTime  @default(now()) 
+  updatedAt        DateTime  @updatedAt 
+
+  @@map("Resource")
+}
+
+model Allocation_resource {
+  allocation_id     Int     @id @default(autoincrement())
+  takeoff           Takeoff @relation(fields: [takeoff_id], references: [takeoff_id])
+  takeoff_id        Int
+  resource          Resource @relation(fields: [resource_id], references: [resource_id])
+  resource_id       Int
+  conversionRate    Decimal
+  allocation_amount Decimal @default(0)
+
+  @@map("Allocation_resource")
+}
+
+model Financial {
+  financial_id  Int      @id @default(autoincrement())
+  project       Project @relation(fields: [project_id], references: [project_id])
+  project_id    Int      @unique
+  total_income  Decimal
+  total_expense Decimal
+  profit_loss   Decimal  @default(0)
+
+  @@map("Financial")
+}
+
+
+enum ResourceType {
+  Equipment
+  Labour
+  Material
+}
