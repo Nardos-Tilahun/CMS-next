@@ -37,7 +37,35 @@ export async function PUT(
       first_name: body.firstName,
       last_name: body.lastName,
       phone_number: body.phoneNumber,
+      updatedAt: new Date(),
     },
   });
   return NextResponse.json(updatedUser);
+}
+
+export async function DELETE(
+  request: NextRequest,
+  { params }: { params: { user_id: number } }
+) {
+  const body = await request.json();
+  const valid = UserSchema.safeParse(body);
+  if (!valid.success) {
+    return NextResponse.json(fromZodError(valid.error), { status: 400 });
+  }
+  const user = await prisma.user.findUnique({
+    where: { email: body.email },
+  });
+  if (!user) {
+    return NextResponse.json({ error: 'User not found' }, { status: 400 });
+  }
+  const deletedUser = await prisma.user.update({
+    where: { user_id: params.user_id },
+    data: {
+      deletedAt: new Date(),
+    },
+  });
+  if (!deletedUser) {
+    return NextResponse.json({ error: 'User not found' }, { status: 404 });
+  }
+  return NextResponse.json(deletedUser);
 }
