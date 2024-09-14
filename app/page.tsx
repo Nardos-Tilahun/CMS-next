@@ -5,7 +5,7 @@ export default function LandingPage() {
   return (
     <>
       {/* <Landing /> */}
-      <NavBar />
+      {/* <NavBar /> */}
       <SideBar />
     </>
   );

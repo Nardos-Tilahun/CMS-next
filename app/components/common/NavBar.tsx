@@ -1,17 +1,18 @@
+'use client';
 import React, { useState } from 'react';
 import Link from 'next/link';
 import Image from 'next/image';
 import logoImage from '@/public/images/logoImage.webp';
 import { FaProjectDiagram, FaUsers, FaChartLine } from 'react-icons/fa';
 import { FiLogIn, FiLogOut, FiUserPlus } from 'react-icons/fi';
-// import { useSession, signIn, signOut } from 'next-auth/react';
+import { useSession, signIn, signOut } from 'next-auth/react';
 
 const NavBar = () => {
-  // const { data: session } = useSession();
+  const { data: session } = useSession();
   const [isProfileMenuOpen, setIsProfileMenuOpen] = useState(false);
 
   const toggleProfileMenu = () => {
-    setIsProfileMenuOpen(!isProfileMenuOpen);
+    !isProfileMenuOpen;
   };
 
   return (
