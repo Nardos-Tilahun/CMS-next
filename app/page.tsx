@@ -1,12 +1,9 @@
-import NavBar from './components/common/NavBar';
-import SideBar from './components/common/SideBar';
+import { Dashboard } from "./components/dashboard";
 
 export default function LandingPage() {
   return (
     <>
-      {/* <Landing /> */}
-      {/* <NavBar /> */}
-      <SideBar />
+      <Dashboard />
     </>
   );
 }

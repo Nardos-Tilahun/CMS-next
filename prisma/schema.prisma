@@ -19,123 +19,174 @@ model Project {
   project_location   String?
   start_date         DateTime?
   end_date           DateTime?
-  contract_amount    Decimal?
-  project_manager    User?    @relation("ProjectManager", fields: [project_manager_id], references: [user_id])
+  contract_amount    Decimal?  @db.Decimal(10, 2)
+  project_manager    User?     @relation("ProjectManager", fields: [project_manager_id], references: [user_id])
   project_manager_id Int?
-  client             User?    @relation("Client", fields: [client_id], references: [user_id])
+  client             User?     @relation("Client", fields: [client_id], references: [user_id])
   client_id          Int?
+  over_head_cost_percent Decimal? @db.Decimal(10, 2)
+  profit_cost_percent    Decimal? @db.Decimal(10, 2)
   BillOfQuantities   Bill_of_Quantity[]
   Milestones         Milestone[]
-  Financials         Financial?
 
-  @@map("Project")
+  @@map("Projects")
 }
 
 model User {
-  user_id       Int     @id @default(autoincrement())
-  email         String  @unique
-  password      String
-  first_name    String
-  last_name     String
-  phone_number  String?
-  role          Role?  @relation(fields: [role_id], references: [role_id])
-  role_id       Int?
+  user_id          Int       @id @default(autoincrement())
+  email            String    @unique
+  password         String
+  first_name       String?
+  last_name        String?
+  phone_number     String?
+  role             Role?     @relation(fields: [role_id], references: [role_id])
+  role_id          Int?
   managedProjects  Project[] @relation("ProjectManager")
   clientProjects   Project[] @relation("Client")
-  createdAt        DateTime  @default(now()) 
+  createdAt        DateTime  @default(now())
   updatedAt        DateTime  @updatedAt
-  deletedAt        DateTime?
 
-  @@map("User")
+  @@map("Users")
 }
 
 model Role {
-  role_id   Int     @id @default(autoincrement())
-  role_name String  @unique
+  role_id   Int    @id @default(autoincrement())
+  role_name String @unique
   Users     User[]
 
-  @@map("Role")
+  @@map("Roles")
 }
 
 model Bill_of_Quantity {
-  boq_item_id  Int     @id @default(autoincrement())
-  project      Project @relation(fields: [project_id], references: [project_id])
-  project_id   Int
-  item_name    String
-  quantity     Decimal
-  unit         String?
-  unit_cost    Decimal
-  amount       Decimal @default(0)
-  Takeoffs     Takeoff[]
+  boq_item_id       Int      @id @default(autoincrement())
+  project           Project  @relation(fields: [project_id], references: [project_id])
+  project_id        Int
+  item_name         String
+  quantity          Decimal  @db.Decimal(10, 2)
+  unit              String?
+  unit_cost         Decimal  @db.Decimal(10, 2)
+  material_output   Decimal? @db.Decimal(10, 2)
+  labor_output      Decimal? @db.Decimal(10, 2)
+  equipment_output  Decimal? @db.Decimal(10, 2)
+  amount            Decimal  @db.Decimal(10, 2)
+  Takeoffs          Takeoff[]
+  MaterialAllocations  MaterialAllocation[]
+  LaborAllocations     LaborAllocation[]
+  EquipmentAllocations EquipmentAllocation[]
 
-  @@map("Bill_of_Quantity")
+  @@map("Bill_of_Quantities")
 }
 
 model Milestone {
   milestone_id          Int       @id @default(autoincrement())
-  project               Project  @relation(fields: [project_id], references: [project_id])
+  project               Project   @relation(fields: [project_id], references: [project_id])
   project_id            Int
   milestone_name        String
   milestone_start_date  DateTime?
   milestone_end_date    DateTime?
-  milestone_budget      Decimal?
+  milestone_budget      Decimal?  @db.Decimal(10, 2)
   Takeoffs              Takeoff[]
 
-  @@map("Milestone")
+  @@map("Milestones")
 }
 
 model Takeoff {
   takeoff_id        Int     @id @default(autoincrement())
   takeoff_name      String?
-  boq_item          Bill_of_Quantity@relation(fields: [boq_item_id], references: [boq_item_id])
+  boq_item          Bill_of_Quantity @relation(fields: [boq_item_id], references: [boq_item_id])
   boq_item_id       Int
   milestone         Milestone @relation(fields: [milestone_id], references: [milestone_id])
   milestone_id      Int
-  takeoff_quantity  Decimal
-  AllocationResource Allocation_resource[]
+  takeoff_quantity  Decimal  @db.Decimal(10, 2)
+  status            String?
+  ActivityReports   ActivityReport[]
 
   @@map("Takeoff")
 }
 
-model Resource {
-  resource_id        Int      @id @default(autoincrement())
-  resource_name      String
-  resource_type      ResourceType
-  resource_unit      String?
-  resource_cost_per_unit Decimal
-  AllocationResource Allocation_resource[]
-  createdAt        DateTime  @default(now()) 
-  updatedAt        DateTime  @updatedAt 
+model Material {
+  material_id   Int      @id @default(autoincrement())
+  material_name String
+  material_unit String?
+  material_rate Decimal  @db.Decimal(10, 2)
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+  Allocations   MaterialAllocation[]
 
-  @@map("Resource")
+  @@map("material")
 }
 
-model Allocation_resource {
-  allocation_id     Int     @id @default(autoincrement())
-  takeoff           Takeoff @relation(fields: [takeoff_id], references: [takeoff_id])
-  takeoff_id        Int
-  resource          Resource @relation(fields: [resource_id], references: [resource_id])
-  resource_id       Int
-  conversionRate    Decimal
-  allocation_amount Decimal @default(0)
+model Labor {
+  labor_id   Int      @id @default(autoincrement())
+  labor_name String
+  labor_unit String?
+  labor_rate Decimal  @db.Decimal(10, 2)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  Allocations LaborAllocation[]
 
-  @@map("Allocation_resource")
+  @@map("labor")
 }
 
-model Financial {
-  financial_id  Int      @id @default(autoincrement())
-  project       Project @relation(fields: [project_id], references: [project_id])
-  project_id    Int      @unique
-  total_income  Decimal
-  total_expense Decimal
-  profit_loss   Decimal  @default(0)
+model Equipment {
+  equipment_id   Int      @id @default(autoincrement())
+  equipment_name String
+  equipment_unit String?
+  equipment_rate Decimal  @db.Decimal(10, 2)
+  fuel_rate      Decimal  @db.Decimal(10, 2)
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+  Allocations    EquipmentAllocation[]
 
-  @@map("Financial")
+  @@map("equipment")
 }
 
+model MaterialAllocation {
+  material_allocation_id Int @id @default(autoincrement())
+  boq_item               Bill_of_Quantity @relation(fields: [boq_item_id], references: [boq_item_id])
+  boq_item_id            Int
+  material               Material @relation(fields: [material_id], references: [material_id])
+  material_id            Int
+  conversionRate         Decimal @db.Decimal(10, 2)
+  cost_per_unit          Decimal @db.Decimal(10, 2)
 
-enum ResourceType {
-  Equipment
-  Labour
-  Material
+  @@map("material_allocation")
+}
+
+model LaborAllocation {
+  labor_allocation_id Int @id @default(autoincrement())
+  boq_item            Bill_of_Quantity @relation(fields: [boq_item_id], references: [boq_item_id])
+  boq_item_id         Int
+  labor               Labor @relation(fields: [labor_id], references: [labor_id])
+  labor_id            Int
+  utilization_factor  Decimal @db.Decimal(10, 2)
+  conversionRate      Decimal @db.Decimal(10, 2)
+  cost_per_unit       Decimal @db.Decimal(10, 2)
+
+  @@map("labor_allocation")
+}
+
+model EquipmentAllocation {
+  equipment_allocation_id Int @id @default(autoincrement())
+  boq_item                Bill_of_Quantity @relation(fields: [boq_item_id], references: [boq_item_id])
+  boq_item_id             Int
+  equipment               Equipment @relation(fields: [equipment_id], references: [equipment_id])
+  equipment_id            Int
+  utilization_factor      Decimal @db.Decimal(10, 2)
+  conversionRate          Decimal @db.Decimal(10, 2)
+  rental_cost             Decimal @db.Decimal(10, 2)
+  fuel_consumption        Decimal @db.Decimal(10, 2)
+  fuel_cost               Decimal @db.Decimal(10, 2)
+
+  @@map("equipment_allocation")
+}
+
+model ActivityReport {
+  activity_report_id Int      @id @default(autoincrement())
+  takeoff            Takeoff  @relation(fields: [takeoff_id], references: [takeoff_id])
+  takeoff_id         Int
+  quantity           Int
+  activityDate       DateTime
+
+  @@map("activity_report")
 }
