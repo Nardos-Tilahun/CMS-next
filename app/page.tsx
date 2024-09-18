@@ -1,9 +1,9 @@
-import { Dashboard } from "./components/dashboard";
+import DashboardPage from "./dashboard/page";
 
 export default function LandingPage() {
   return (
     <>
-      <Dashboard />
+      <DashboardPage />
     </>
   );
 }

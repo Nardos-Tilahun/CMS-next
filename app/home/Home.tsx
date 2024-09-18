@@ -1,14 +1,16 @@
 'use client'
-
 import React, { useState } from 'react'
-import { Button } from "@/app/components/ui/button"
-import { Card, CardContent, CardHeader, CardTitle } from "@/app/components/ui/card"
-import { Input } from "@/app/components/ui/input"
-import { Label } from "@/app/components/ui/label"
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/app/components/ui/tabs"
+import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts'
 import { PlusIcon, UserIcon, FileIcon, FlagIcon, PackageIcon, ClipboardIcon, DollarSignIcon, MenuIcon, XIcon, ArrowLeftIcon } from 'lucide-react'
 import Image from 'next/image'
+import { Sidebar } from '@/components/sidebar'
+import { Navbar } from '@/components/navbar'
+
 
 
 interface Milestone {
@@ -113,83 +115,72 @@ const resourceData = [
   { name: 'Concrete', quantity: 500, unit: 'm³', allocated: 40 },
 ]
 
-export function Dashboard() {
+export function Home() {
   const [activeTab, setActiveTab] = useState('projects')
-  const [sidebarOpen, setSidebarOpen] = useState(false)
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false)
   const [selectedProject, setSelectedProject] = useState<Project | null>(null)
+  const [filteredProjects, setFilteredProjects] = useState<Project[]>(() => projectData.map(project => ({
+    ...project,
+    status: project.status as 'in-progress' | 'completed' | 'late'
+  })))
 
-  const toggleSidebar = () => setSidebarOpen(!sidebarOpen)
+  function toggleSidebar() {
+    setIsSidebarOpen(!isSidebarOpen)
+  }
+  function handleSearchChange(event: React.ChangeEvent<HTMLInputElement>) {
+
+    const searchTerm = event.target.value.toLowerCase();
+    setFilteredProjects(projectData.filter(project =>
+      project.name.toLowerCase().includes(searchTerm)
+    ).map(project => ({
+      ...project,
+      status: project.status as 'in-progress' | 'completed' | 'late'
+    })));
+  }
 
   return (
     <div className="flex h-screen bg-gray-100">
       {/* Sidebar */}
-      <div className={`${sidebarOpen ? 'block' : 'hidden'} md:block fixed inset-y-0 left-0 z-50 w-64 bg-white shadow-md transform transition-transform duration-300 ease-in-out ${sidebarOpen ? 'translate-x-0' : '-translate-x-full'} md:relative md:translate-x-0`}>
-        <div className="p-4">
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-xl font-bold">ABC Contractor</h2>
-            <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
-              <XIcon className="h-4 w-4" />
-            </Button>
-          </div>
-          <nav>
-            <Button variant="ghost" className="w-full justify-start mb-2" onClick={() => { setActiveTab('projects'); setSelectedProject(null); }}>
-              <ClipboardIcon className="mr-2 h-4 w-4" />
-              Projects
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-2" onClick={() => setActiveTab('users')}>
-              <UserIcon className="mr-2 h-4 w-4" />
-              Users
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-2" onClick={() => setActiveTab('resources')}>
-              <PackageIcon className="mr-2 h-4 w-4" />
-              Resources
-            </Button>
-            <Button variant="ghost" className="w-full justify-start mb-2" onClick={() => setActiveTab('profitability')}>
-              <DollarSignIcon className="mr-2 h-4 w-4" />
-              Profitability
-            </Button>
-          </nav>
-        </div>
-      </div>
+      <div className={`fixed inset-0 z-40 h-full transform ${isSidebarOpen ? 'translate-x-0' : '-translate-x-full'} transition-transform duration-300 ease-in-out md:hidden`}>
+
+        <Sidebar />
+        </div>   
+    
 
       {/* Main Content */}
-      <div className="flex-1 overflow-auto">
-        <header className="bg-white shadow-sm p-4 flex justify-between items-center">
-          <Button variant="ghost" size="icon" className="md:hidden" onClick={toggleSidebar}>
-            <MenuIcon className="h-6 w-6" />
-          </Button>
-          <h1 className="text-2xl font-bold">Construction Management Dashboard</h1>
-        </header>
+      <div className="flex-1 flex justify-center overflow-auto">
+        <div className="w-full max-w-7xl">
+        <Navbar />
+          <main className="p-6">
+            <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
+              <TabsList className="hidden md:flex space-x-10 md:justify-left">
+                <TabsTrigger value="projects">Projects</TabsTrigger>
+                <TabsTrigger value="users">Users</TabsTrigger>
+                <TabsTrigger value="resources">Resources</TabsTrigger>
+                <TabsTrigger value="profitability">Profitability</TabsTrigger>
+              </TabsList>
 
-        <main className="p-6">
-          <Tabs value={activeTab} onValueChange={setActiveTab} className="space-y-4">
-            <TabsList className="hidden md:flex">
-              <TabsTrigger value="projects">Projects</TabsTrigger>
-              <TabsTrigger value="users">Users</TabsTrigger>
-              <TabsTrigger value="resources">Resources</TabsTrigger>
-              <TabsTrigger value="profitability">Profitability</TabsTrigger>
-            </TabsList>
+              <TabsContent value="projects" className="space-y-4">
+                {selectedProject ? (
+                  <ProjectDetails project={selectedProject} onBack={() => setSelectedProject(null)} />
+                ) : (
+                  <ProjectOverview projects={filteredProjects} onSelectProject={setSelectedProject} />
+                )}
+              </TabsContent>
 
-            <TabsContent value="projects" className="space-y-4">
-              {selectedProject ? (
-                <ProjectDetails project={selectedProject} onBack={() => setSelectedProject(null)} />
-              ) : (
-                <ProjectOverview projects={projectData as Project[]} onSelectProject={setSelectedProject} />
-              )}
-            </TabsContent>
+              <TabsContent value="users" className="space-y-4">
+                <UserManagement />
+              </TabsContent>
 
-            <TabsContent value="users" className="space-y-4">
-              <UserManagement />
-            </TabsContent>
-
-            <TabsContent value="resources" className="space-y-4">
-              <ResourceManagement resources={resourceData} />
-            </TabsContent>
-            <TabsContent value="profitability" className="space-y-4">
-              <ProfitabilityOverview projects={projectData as Project[]} />
-            </TabsContent>
-          </Tabs>
-        </main>
+              <TabsContent value="resources" className="space-y-4">
+                <ResourceManagement resources={resourceData} />
+              </TabsContent>
+              <TabsContent value="profitability" className="space-y-4">
+                <ProfitabilityOverview projects={projectData as Project[]} />
+              </TabsContent>
+            </Tabs>
+          </main>
+        </div>
       </div>
     </div>
   )
